@@ -46,12 +46,12 @@ def evaluate_image():
     
     return make_succ_response(score_list)
 
-@app.route('/')
+@app.route('/xxx')
 def index():
     """
     :return: 返回index页面
     """
-    return render_template('index.html')
+    return 'hello'
 
 
 @app.route('/api/count', methods=['POST'])
