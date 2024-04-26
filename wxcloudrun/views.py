@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import render_template, request
+from flask import request
 from run import app
 from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter, update_counterbyid
 from wxcloudrun.model import Counters
@@ -13,36 +13,32 @@ from keras.preprocessing.image import load_img, img_to_array
 from wxcloudrun.utils.model import model
 from wxcloudrun.utils.score_utils import mean_score, std_score
 
+
 @app.route('/evaluate', methods=['POST'])
 def evaluate_image():
-    images = request.json.get('image')
+    photo = request.files['image']
 
-    score_list = []
-    for idx, img_path in enumerate(images):
-        img_path = os.path.join('img/', f'temp_{idx}.jpg')
+    idx = np.random.randint(1, 1000)
 
-        with open(img_path, 'wb') as f:
-            f.write(img_path)
+    save_path = os.path.join('./wxcloudrun/img/', f'temp_{idx}.jpg')
 
-        x = load_img(img_path, target_size=(224, 224))
-        x = img_to_array(x)
-        x = np.expand_dims(x, axis=0)
-        x = preprocess_input(x)
+    photo.save(save_path)
 
-        scores = model.predict(x, batch_size=1, verbose=0)[0]
+    x = load_img(save_path, target_size=(224, 224))
+    x = img_to_array(x)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
 
-        mean = mean_score(scores)
-        std = std_score(scores)
+    scores = model.predict(x, batch_size=1, verbose=0)[0]
 
-        file_name = Path(img_path).name.lower()
-        score_list.append((file_name, mean))
+    mean = mean_score(scores)
+    std = std_score(scores)
 
-        print("Evaluating : ", img_path)
-        print("NIMA Score : %0.3f +- (%0.3f)" % (mean, std))
+    file_name = Path(save_path).name.lower()
+    score_list=(file_name, mean, std)
 
-    score_list = sorted(score_list, key=lambda x: x[1], reverse=True)
-    for i, (name, score) in enumerate(score_list):
-        print("%d)" % (i + 1), "%s : Score = %0.5f" % (name, score))
+    print("Evaluating : ", save_path)
+    print("NIMA Score : %0.3f +- (%0.3f)" % (mean, std))
     
     return make_succ_response(score_list)
 
