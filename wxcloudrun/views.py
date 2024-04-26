@@ -10,8 +10,8 @@ import numpy as np
 from pathlib import Path
 from keras.applications.mobilenet import preprocess_input
 from keras.preprocessing.image import load_img, img_to_array
-from utils.model import model
-from utils.score_utils import mean_score, std_score
+from wxcloudrun.utils.model import model
+from wxcloudrun.utils.score_utils import mean_score, std_score
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate_image():
