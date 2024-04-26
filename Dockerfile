@@ -7,9 +7,10 @@ FROM python:3.11
 # RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
 
 # 使用 HTTPS 协议访问容器云调用证书安装
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apk add ca-certificates
 
-RUN apt-get install -y python3 python3-pip python3-venv
+RUN apk add --update --no-cache python3 py3-pip \
+&& rm -rf /var/cache/apk/*
 
 # 拷贝当前项目到/app目录下（.dockerignore中文件除外）
 COPY . /app
@@ -19,11 +20,10 @@ WORKDIR /app
 
 # 安装依赖到指定的/install文件夹
 # 选用国内镜像源以提高下载速度
-RUN python3 -m venv NIMA\
-&& /bin/bash -c "source NIMA/bin/activate" \
-&& pip install --upgrade pip \
+RUN pip install --upgrade pip \
 && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \
-&& pip install -r requirements.txt
+&& pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn \
+&& pip install --user -r requirements.txt
 
 # 暴露端口。
 # 此处端口必须与「服务设置」-「流水线」以及「手动上传代码包」部署时填写的端口一致，否则会部署失败。
