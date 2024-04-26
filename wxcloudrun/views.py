@@ -15,17 +15,18 @@ from utils.score_utils import mean_score, std_score
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate_image():
-    images = request.files.getlist('image')
+    images = request.json.get('image')
 
     score_list = []
-    for idx, img in enumerate(images):
+    for idx, img_path in enumerate(images):
         img_path = os.path.join('img/', f'temp_{idx}.jpg')
 
-        img.save(img_path)
+        with open(img_path, 'wb') as f:
+            f.write(img_path)
 
-        x = img_to_array(img)
+        x = load_img(img_path, target_size=(224, 224))
+        x = img_to_array(x)
         x = np.expand_dims(x, axis=0)
-
         x = preprocess_input(x)
 
         scores = model.predict(x, batch_size=1, verbose=0)[0]
