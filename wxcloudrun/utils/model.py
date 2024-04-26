@@ -11,4 +11,4 @@ with tf.device('/CPU:0'):
     x = Dense(10, activation='softmax')(x)
 
     model = Model(base_model.input, x)
-    model.load_weights('./weights/mobilenet_weights.h5')
+    model.load_weights('../weights/mobilenet_weights.h5')
