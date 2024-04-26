@@ -3,8 +3,47 @@ from flask import render_template, request
 from run import app
 from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter, update_counterbyid
 from wxcloudrun.model import Counters
-from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
+from wxcloudrun.utils.response import make_succ_empty_response, make_succ_response, make_err_response
 
+import os
+import numpy as np
+from pathlib import Path
+from keras.applications.mobilenet import preprocess_input
+from keras.preprocessing.image import load_img, img_to_array
+from utils.model import model
+from utils.score_utils import mean_score, std_score
+
+@app.route('/evaluate', methods=['POST'])
+def evaluate_image():
+    images = request.files.getlist('image')
+
+    score_list = []
+    for idx, img in enumerate(images):
+        img_path = os.path.join('img/', f'temp_{idx}.jpg')
+
+        img.save(img_path)
+
+        x = img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+
+        x = preprocess_input(x)
+
+        scores = model.predict(x, batch_size=1, verbose=0)[0]
+
+        mean = mean_score(scores)
+        std = std_score(scores)
+
+        file_name = Path(img_path).name.lower()
+        score_list.append((file_name, mean))
+
+        print("Evaluating : ", img_path)
+        print("NIMA Score : %0.3f +- (%0.3f)" % (mean, std))
+
+    score_list = sorted(score_list, key=lambda x: x[1], reverse=True)
+    for i, (name, score) in enumerate(score_list):
+        print("%d)" % (i + 1), "%s : Score = %0.5f" % (name, score))
+    
+    return make_succ_response(score_list)
 
 @app.route('/')
 def index():
