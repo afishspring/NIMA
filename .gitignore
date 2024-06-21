@@ -1,3 +1,2 @@
-.cloudbase/
 __pycache__/
-wxcloudrun/img/
+*.jpg
